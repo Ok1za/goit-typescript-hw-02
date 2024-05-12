@@ -1,6 +1,6 @@
 import { MagnifyingGlass } from 'react-loader-spinner';
 
-const Loader = () => {
+const Loader: React.FC = () => {
     return (
         <div>
             <MagnifyingGlass
