@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const accessKey: string = "F1ypMrdilY3mHoC1nQzrj7Khfn6zVOBxLlMMFY1g7ls";
-const apiUrl: string = "https://api.unsplash.com/";
+export const accessKey: string = "F1ypMrdilY3mHoC1nQzrj7Khfn6zVOBxLlMMFY1g7ls";
+export const apiUrl: string = "https://api.unsplash.com/";
 
 export const requestQuery: (query: string, page: number) => Promise<any> = async (query = '', page = 1) => {
     try {

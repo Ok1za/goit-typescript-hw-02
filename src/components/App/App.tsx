@@ -4,10 +4,12 @@ import ImageGallery from '../ImageGallery/ImageGallery';
 import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn';
 import Loader from '..//Loader/Loader';
 import ImageModal from '../ImageModal/ImageModal';
+import { accessKey } from '../../api';
 import css from './App.module.css';
+import ErrorMessage from '../ErrorMessage/ErrorMessage';
 
-interface Image {
-  id: number;
+export interface UnsplashImage {
+  id: string;
   urls: {
     regular: string;
     small: string;
@@ -15,13 +17,19 @@ interface Image {
   alt_description: string;
 }
 
+interface UnsplashResponse {
+  results: UnsplashImage[];
+  errors?: string[];
+}
+
 const App: React.FC = () => {
   const [query, setQuery] = useState<string>('');
-  const [images, setImages] = useState<Image[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadMore, setIsLoadMore] = useState(false);
-  const [modalImage, setModalImage] = useState<Image | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [images, setImages] = useState<UnsplashImage[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadMore, setIsLoadMore] = useState<boolean>(false);
+  const [modalImage, setModalImage] = useState<UnsplashImage | null>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -29,18 +37,19 @@ const App: React.FC = () => {
     setIsLoadMore(false);
   };
 
-  const fetchImages = async () => {
+  const fetchImages = async (): Promise<void> => {
     const perPage = 12;
     const url = `https://api.unsplash.com/search/photos?page=${isLoadMore ? 2 : 1}&per_page=${perPage}&query=${query}`;
 
     try {
+      setIsLoading(true);
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          Authorization: 'Client-ID {YOUR_UNSPLASH_ACCESS_KEY}',
+          Authorization: `Client-ID ${accessKey}`,
         },
       });
-      const data = await response.json();
+      const data: UnsplashResponse = await response.json();
       if (data.errors) {
         throw new Error(data.errors[0]);
       }
@@ -52,17 +61,17 @@ const App: React.FC = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching images:', error);
+      setError('Failed to fetch images');
       setIsLoading(false);
     }
   };
 
   const handleLoadMore = () => {
     setIsLoadMore(true);
-    setIsLoading(true);
     fetchImages();
   };
 
-  const handleImageClick = (image: Image) => {
+  const handleImageClick = (image: UnsplashImage) => {
     setModalImage(image);
     setIsOpen(true);
   };
@@ -73,7 +82,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (query) {
-      setIsLoading(true);
       fetchImages();
     }
   }, [query]);
@@ -81,7 +89,9 @@ const App: React.FC = () => {
   return (
     <div className={css.container}>
       <SearchBar onSearch={handleSearch} />
-      {isLoading ? (
+      {error ? (
+        <ErrorMessage message={error} />
+      ) : isLoading ? (
         <Loader />
       ) : (
         <ImageGallery images={images} onImageClick={handleImageClick} />
